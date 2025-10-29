@@ -1,0 +1,83 @@
+"use client";
+
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import type { Ad } from '@/app/lib/types';
+
+interface PhoneVerifyDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  approvedPhones: string[];
+  onVerifySuccess: (phone: string) => void;
+  editingAd?: Ad | null;
+  purpose?: string;
+}
+
+const PhoneVerifyDialog = ({ isOpen, onOpenChange, approvedPhones, onVerifySuccess, editingAd, purpose = "post an ad" }: PhoneVerifyDialogProps) => {
+  const [phone, setPhone] = useState('');
+  const { toast } = useToast();
+
+  const handleVerify = () => {
+    if (!phone) {
+      toast({ title: 'Please enter your phone number.', variant: 'destructive' });
+      return;
+    }
+
+    // If editing, the check is different. The phone must match the ad's phone.
+    if (editingAd) {
+      if(editingAd.phone === phone) {
+        toast({ title: 'Verification successful.' });
+        onVerifySuccess(phone);
+      } else {
+        toast({ title: 'This phone number does not match the ad creator.', variant: 'destructive' });
+      }
+    } else {
+      // If creating, check against the approved list.
+      if (approvedPhones.includes(phone)) {
+        toast({ title: 'Verification successful.' });
+        onVerifySuccess(phone);
+      } else {
+        toast({ title: 'This phone number is not approved.', description: 'Please contact admin for approval.', variant: 'destructive' });
+      }
+    }
+  };
+  
+  const handleClose = (open: boolean) => {
+    if (!open) {
+      setPhone('');
+    }
+    onOpenChange(open);
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-headline">Phone Verification</DialogTitle>
+          <DialogDescription>
+            {editingAd ? "To edit this ad, please re-enter your phone number." : `To ${purpose}, please enter your approved phone number.`}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <Input
+            id="verify-phone"
+            type="tel"
+            placeholder="Enter your phone number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
+          />
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => handleClose(false)}>Cancel</Button>
+          <Button type="button" onClick={handleVerify}>Verify</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default PhoneVerifyDialog;

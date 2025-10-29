@@ -1,0 +1,150 @@
+"use client";
+
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import type { AuthProps } from '@/app/lib/types';
+import { adminPassword as pw } from '@/app/lib/data';
+import { Separator } from '@/components/ui/separator';
+
+const AdminTab = ({
+  isAdminLoggedIn,
+  setIsAdminLoggedIn,
+  isManagementLoggedIn,
+  approvedPhones,
+  setApprovedPhones,
+  managementPassword,
+  setManagementPassword,
+}: AuthProps) => {
+  const [password, setPassword] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newMgmtPassword, setNewMgmtPassword] = useState('');
+  const { toast } = useToast();
+
+  const handleAdminLogin = () => {
+    if (password === pw) {
+      setIsAdminLoggedIn(true);
+      toast({ title: "Admin login successful." });
+    } else {
+      toast({ title: "Invalid admin password.", variant: "destructive" });
+    }
+    setPassword('');
+  };
+  
+  const approvePhoneNumber = () => {
+    if (newPhone && !approvedPhones.includes(newPhone)) {
+        setApprovedPhones([...approvedPhones, newPhone]);
+        toast({ title: `Phone number ${newPhone} approved.` });
+        setNewPhone('');
+    } else if (approvedPhones.includes(newPhone)) {
+        toast({ title: 'This phone number is already approved!', variant: 'destructive' });
+    } else {
+        toast({ title: 'Please enter a phone number.', variant: 'destructive' });
+    }
+  };
+
+  const removeApprovedPhone = (phoneToRemove: string) => {
+    setApprovedPhones(approvedPhones.filter(p => p !== phoneToRemove));
+    toast({ title: `Phone number ${phoneToRemove} removed.` });
+  };
+  
+  const handleSetManagementPassword = () => {
+    if (newMgmtPassword) {
+        setManagementPassword(newMgmtPassword);
+        toast({ title: "Management password updated successfully." });
+        setNewMgmtPassword('');
+    } else {
+        toast({ title: "Please enter a new password.", variant: "destructive" });
+    }
+  };
+
+
+  if (!isAdminLoggedIn) {
+    return (
+      <Card className="max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="font-headline">Admin Access</CardTitle>
+          <CardDescription>Please enter the admin password to continue.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input
+            type="password"
+            placeholder="Admin Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+          />
+          <Button onClick={handleAdminLogin} className="w-full">Admin Login</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Admin Control Panel</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Welcome, Admin. Here you can manage community settings.</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline text-lg">Phone Number Approval</CardTitle>
+          <CardDescription>Approve phone numbers for posting content.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter phone number to approve"
+              value={newPhone}
+              onChange={(e) => setNewPhone(e.target.value)}
+            />
+            <Button onClick={approvePhoneNumber}>Approve</Button>
+          </div>
+          <Separator />
+          <h4 className="font-medium">Approved Phone Numbers ({approvedPhones.length})</h4>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {approvedPhones.length > 0 ? (
+                approvedPhones.map((phone) => (
+                    <div key={phone} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                        <span className="font-mono text-sm">{phone}</span>
+                        <Button variant="destructive" size="sm" onClick={() => removeApprovedPhone(phone)}>Remove</Button>
+                    </div>
+                ))
+            ) : (
+                <p className="text-muted-foreground text-sm">No phone numbers approved yet.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+            <CardTitle className="font-headline text-lg">Management Access</CardTitle>
+            <CardDescription>Set the password for the management panel.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+             <div className="flex gap-2">
+                <Input
+                    type="password"
+                    placeholder="New Management Password"
+                    value={newMgmtPassword}
+                    onChange={(e) => setNewMgmtPassword(e.target.value)}
+                />
+                <Button onClick={handleSetManagementPassword}>Set Password</Button>
+            </div>
+        </CardContent>
+      </Card>
+      
+       <Button variant="outline" className="w-full" onClick={() => setIsAdminLoggedIn(false)}>Logout</Button>
+    </div>
+  );
+};
+
+export default AdminTab;

@@ -1,0 +1,11 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "villa-map",
+      "description": "A placeholder map for a villa location.",
+      "imageUrl": "https://picsum.photos/seed/villa-map/800/400",
+      "imageHint": "map location"
+    }
+  ]
+}
