@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { StoreIcon } from '@/components/icons';
 
 interface SaimaMartModalProps {
   isOpen: boolean;
@@ -56,7 +55,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, isMartOpen, setIsMartOpen, isAdm
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="items-center text-center">
-          <StoreIcon className="w-12 h-12 text-primary" />
+          <div className="text-4xl">🛒</div>
           <DialogTitle className="font-headline text-2xl">Saima Mart</DialogTitle>
           <DialogDescription>
             Check the current status of the community mart.

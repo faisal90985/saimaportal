@@ -1,4 +1,4 @@
-import type { VillaData, Ad, Complaint, ManagementPost, EmergencyContact, NamazTimings } from './types';
+import type { VillaData, Ad, Complaint, ManagementPost, EmergencyContact, NamazTimings, PostType } from './types';
 
 const DEFAULT_MAP_LINK = "https://www.google.com/maps/d/embed?mid=1CBayu1ggr-NkdhOJhMuFnf24FmJGi44&ehbc=2E312F";
 
@@ -87,10 +87,10 @@ export const villaData: VillaData = {
     ...generateVillaRange("R1", 542, 554, "120 Single Story", "Street 45", "B"),
     ...generateVillaRange("A1", 47, 64, "240", "Street 46", "B"),
     ...generateVillaRange("A1", 29, 46, "240", "Street Main", "B"),
-    ...generateVillaRange("B1", 526, 545, "160", "Street Main", "B"),
-    ...generateVillaRange("B1", 600, 619, "160", "Street 47", "B"),
-    ...generateVillaRange("B1", 546, 572, "160", "Street Main", "B"),
-    ...generateVillaRange("B1", 573, 599, "160", "Street 48", "B"),
+    ...generateVillaRange("B", 526, 545, "160", "Street Main", "B"),
+    ...generateVillaRange("B", 600, 619, "160", "Street 47", "B"),
+    ...generateVillaRange("B", 546, 572, "160", "Street Main", "B"),
+    ...generateVillaRange("B", 573, 599, "160", "Street 48", "B"),
     "R-193": { category: "120 ONE UNIT", street: "Street 31", block: "B", residents: "Mr. Obaid Sadiq", mapLink: DEFAULT_MAP_LINK },
     "R-194": { category: "120 ONE UNIT", street: "Street 31", block: "B", residents: "Mr. Arif Abdullah", mapLink: DEFAULT_MAP_LINK },
     "R-214": { category: "120 ONE UNIT", street: "Street 31", block: "B", residents: "Mr. Junaid Tanoli", mapLink: DEFAULT_MAP_LINK },

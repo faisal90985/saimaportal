@@ -12,7 +12,6 @@ import AdminTab from '@/components/tabs/admin-tab';
 import MasjidModal from '@/components/modals/masjid-modal';
 import SaimaMartModal from '@/components/modals/saima-mart-modal';
 import { Button } from '@/components/ui/button';
-import { MosqueIcon, StoreIcon } from '@/components/icons';
 import type { Tab } from '@/app/lib/types';
 import { approvedPhones as initialApprovedPhones, managementPassword as initialManagementPassword } from '@/app/lib/data';
 
@@ -70,17 +69,17 @@ export default function Home() {
           size="icon"
           aria-label="Saima Mart Status"
           onClick={() => setShowSaimaMartModal(true)}
-          className="rounded-full w-14 h-14 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
+          className="rounded-full w-14 h-14 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 text-2xl"
         >
-          <StoreIcon className="w-7 h-7" />
+          🛒
         </Button>
         <Button 
           size="icon"
           aria-label="Masjid Timings"
           onClick={() => setShowMasjidModal(true)}
-          className="rounded-full w-14 h-14 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
+          className="rounded-full w-14 h-14 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 text-2xl"
         >
-          <MosqueIcon className="w-7 h-7" />
+          🕌
         </Button>
       </div>
 
