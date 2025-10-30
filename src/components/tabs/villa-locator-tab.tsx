@@ -17,7 +17,7 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
   const [villaData, setVillaData] = useState(initialVillaData);
   const { toast } = useToast();
 
-  const [ownerName, setOwnerName] = useState('');
+  const [residents, setResidents] = useState('');
   const [currentVilla, setCurrentVilla] = useState('');
 
   const mapPlaceholder = PlaceHolderImages.find(img => img.id === 'villa-map');
@@ -46,7 +46,7 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
       setVillaDetails(villa);
       setNotFound(false);
       setCurrentVilla(formattedTerm);
-      setOwnerName(villa.ownerName || '');
+      setResidents(villa.residents || '');
     } else {
       setVillaDetails(null);
       setNotFound(true);
@@ -54,12 +54,12 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
     }
   };
 
-  const handleUpdateOwner = () => {
+  const handleUpdateResidents = () => {
     if (isAdminLoggedIn && currentVilla) {
-        const updatedVillaData = { ...villaData, [currentVilla]: { ...villaData[currentVilla], ownerName: ownerName }};
+        const updatedVillaData = { ...villaData, [currentVilla]: { ...villaData[currentVilla], residents: residents }};
         setVillaData(updatedVillaData);
         setVillaDetails(updatedVillaData[currentVilla]);
-        toast({ title: "Owner name updated successfully." });
+        toast({ title: "Residents updated successfully." });
     }
   };
 
@@ -88,8 +88,8 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             <div className="col-span-2 sm:col-span-1">
-                <p className="text-sm font-medium text-muted-foreground">Owner Name</p>
-                <p className="text-lg font-semibold">{villaDetails.ownerName || '-'}</p>
+                <p className="text-sm font-medium text-muted-foreground">Residents</p>
+                <p className="text-lg font-semibold">{villaDetails.residents || '-'}</p>
             </div>
             <div className="col-span-2 sm:col-span-1">
                 <p className="text-sm font-medium text-muted-foreground">Category</p>
@@ -134,16 +134,16 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
       {isAdminLoggedIn && villaDetails && (
          <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-lg">Update Owner Name (Admin)</CardTitle>
-                <CardDescription>Update the owner name for villa {currentVilla}.</CardDescription>
+                <CardTitle className="font-headline text-lg">Update Residents (Admin)</CardTitle>
+                <CardDescription>Update the residents for villa {currentVilla}.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <Input
-                    placeholder="Enter owner name"
-                    value={ownerName}
-                    onChange={(e) => setOwnerName(e.target.value)}
+                    placeholder="Enter residents' names"
+                    value={residents}
+                    onChange={(e) => setResidents(e.target.value)}
                 />
-                <Button onClick={handleUpdateOwner} className="w-full">Update Owner</Button>
+                <Button onClick={handleUpdateResidents} className="w-full">Update Residents</Button>
             </CardContent>
          </Card>
       )}
@@ -152,3 +152,5 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
 };
 
 export default VillaLocatorTab;
+
+    

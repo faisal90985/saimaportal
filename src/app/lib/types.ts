@@ -4,7 +4,7 @@ export interface Villa {
   category: string;
   street: string;
   block: string;
-  ownerName: string;
+  residents: string;
   mapLink: string;
 }
 
@@ -88,3 +88,5 @@ export interface AuthProps {
   managementPassword: string;
   setManagementPassword: (password: string) => void;
 }
+
+    

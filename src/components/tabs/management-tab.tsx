@@ -7,9 +7,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { managementPosts as initialPosts } from '@/app/lib/data';
+import { managementPosts as initialPosts, postTypes } from '@/app/lib/data';
 import type { ManagementPost, AuthProps, PostType } from '@/app/lib/types';
-import { postTypes } from '@/app/lib/types';
 import ManagementPostCard from '@/components/management-post-card';
 
 const ManagementTab = ({ 
@@ -168,3 +167,5 @@ const ManagementTab = ({
 };
 
 export default ManagementTab;
+
+    
