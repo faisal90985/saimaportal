@@ -141,15 +141,15 @@ export let managementPassword = "password123";
 export let approvedPhones = ["03001234567", "03219876543"];
 
 export let namazTimings: NamazTimings = {
-    fajr: '05:30',
+    fajr: '06:10',
     zuhar: '13:30',
     asar: '16:45',
-    maghrib: '18:45',
+    maghrib: '18:00',
     isha: '20:00',
     jumma: '13:15',
-    imam: 'Hafiz Muhammad Ali',
-    moazin: 'Abdullah Khan',
-    khadim: 'Ahmed Raza'
+    imam: 'janab zulfiqar sahab',
+    moazin: 'janab salman sahab',
+    khadim: 'janab khalil sahab'
 };
 
 export const postTypes: PostType[] = ["Announcement", "Duty Timings", "Maintenance", "Future Plans", "Progress Update", "SOPs"];
