@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { villaData as initialVillaData } from '@/app/lib/data';
 import type { Villa, AuthProps } from '@/app/lib/types';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 
 const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
@@ -19,8 +17,6 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
 
   const [residents, setResidents] = useState('');
   const [currentVilla, setCurrentVilla] = useState('');
-
-  const mapPlaceholder = PlaceHolderImages.find(img => img.id === 'villa-map');
 
   const handleSearch = (term: string) => {
     const upperTerm = term.trim().toUpperCase();
@@ -110,21 +106,21 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
                 <p className="text-lg font-semibold">{villaDetails.residents || '-'}</p>
             </div>
 
-            {mapPlaceholder && (
-              <div className="col-span-2 pt-4">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Location Map</p>
-                <div className="rounded-lg overflow-hidden border">
-                    <Image
-                        src={mapPlaceholder.imageUrl}
-                        alt="Villa location map"
-                        width={800}
-                        height={400}
-                        className="w-full h-auto"
-                        data-ai-hint={mapPlaceholder.imageHint}
-                    />
-                </div>
+            <div className="col-span-2 pt-4">
+              <p className="text-sm font-medium text-muted-foreground mb-2">Location Map</p>
+              <div className="rounded-lg overflow-hidden border">
+                <iframe
+                  src={villaDetails.mapLink}
+                  width="100%"
+                  height="400"
+                  style={{ border: 0 }}
+                  allowFullScreen={false}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="w-full"
+                ></iframe>
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
       )}
