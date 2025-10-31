@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Query,
   onSnapshot,
@@ -61,16 +61,34 @@ export function useCollection<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const safeSetData = useCallback((d: StateDataType) => {
+    if (isMounted.current) setData(d);
+  }, []);
+  const safeSetError = useCallback((e: FirestoreError | Error | null) => {
+    if (isMounted.current) setError(e);
+  }, []);
+  const safeSetIsLoading = useCallback((b: boolean) => {
+    if (isMounted.current) setIsLoading(b);
+  }, []);
+
   useEffect(() => {
     if (!memoizedTargetRefOrQuery) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
+      safeSetData(null);
+      safeSetIsLoading(false);
+      safeSetError(null);
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    safeSetIsLoading(true);
+    safeSetError(null);
 
     // Directly use memoizedTargetRefOrQuery as it's assumed to be the final query
     const unsubscribe = onSnapshot(
@@ -80,9 +98,9 @@ export function useCollection<T = any>(
         for (const doc of snapshot.docs) {
           results.push({ ...(doc.data() as T), id: doc.id });
         }
-        setData(results);
-        setError(null);
-        setIsLoading(false);
+        safeSetData(results);
+        safeSetError(null);
+        safeSetIsLoading(false);
       },
       (error: FirestoreError) => {
         // This logic extracts the path from either a ref or a query
@@ -96,9 +114,9 @@ export function useCollection<T = any>(
           path,
         })
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
+        safeSetError(contextualError)
+        safeSetData(null)
+        safeSetIsLoading(false)
 
         // trigger global error propagation
         errorEmitter.emit('permission-error', contextualError);
@@ -106,9 +124,11 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
-  if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
+  }, [memoizedTargetRefOrQuery, safeSetData, safeSetError, safeSetIsLoading]); // Re-run if the target query/reference changes.
+  
+  if(memoizedTargetRefOrQuery && typeof memoizedTargetRefOrQuery === 'object' && !('__memo' in memoizedTargetRefOrQuery)) {
+    console.warn('The query/reference passed to useCollection was not memoized. This can cause performance issues and infinite loops.', memoizedTargetRefOrQuery);
   }
+
   return { data, isLoading, error };
 }

@@ -1,6 +1,6 @@
 'use client';
     
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   DocumentReference,
   onSnapshot,
@@ -39,7 +39,7 @@ export interface UseDocResult<T> {
  * @returns {UseDocResult<T>} Object with data, isLoading, error.
  */
 export function useDoc<T = any>(
-  memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
+  memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
 ): UseDocResult<T> {
   type StateDataType = WithId<T> | null;
 
@@ -47,29 +47,45 @@ export function useDoc<T = any>(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const safeSetData = useCallback((d: StateDataType) => {
+    if (isMounted.current) setData(d);
+  }, []);
+  const safeSetError = useCallback((e: FirestoreError | Error | null) => {
+    if (isMounted.current) setError(e);
+  }, []);
+  const safeSetIsLoading = useCallback((b: boolean) => {
+    if (isMounted.current) setIsLoading(b);
+  }, []);
+
   useEffect(() => {
     if (!memoizedDocRef) {
-      setData(null);
-      setIsLoading(false);
-      setError(null);
+      safeSetData(null);
+      safeSetIsLoading(false);
+      safeSetError(null);
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-    // Optional: setData(null); // Clear previous data instantly
+    safeSetIsLoading(true);
+    safeSetError(null);
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
         if (snapshot.exists()) {
-          setData({ ...(snapshot.data() as T), id: snapshot.id });
+          safeSetData({ ...(snapshot.data() as T), id: snapshot.id });
         } else {
-          // Document does not exist
-          setData(null);
+          safeSetData(null);
         }
-        setError(null); // Clear any previous error on successful snapshot (even if doc doesn't exist)
-        setIsLoading(false);
+        safeSetError(null); 
+        safeSetIsLoading(false);
       },
       (error: FirestoreError) => {
         const contextualError = new FirestorePermissionError({
@@ -77,17 +93,20 @@ export function useDoc<T = any>(
           path: memoizedDocRef.path,
         })
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
+        safeSetError(contextualError)
+        safeSetData(null)
+        safeSetIsLoading(false)
 
-        // trigger global error propagation
         errorEmitter.emit('permission-error', contextualError);
       }
     );
 
     return () => unsubscribe();
-  }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
+  }, [memoizedDocRef, safeSetData, safeSetError, safeSetIsLoading]);
+
+  if(memoizedDocRef && typeof memoizedDocRef === 'object' && !('__memo' in memoizedDocRef)) {
+     console.warn('The document reference passed to useDoc was not memoized. This can cause performance issues and infinite loops.', memoizedDocRef);
+  }
 
   return { data, isLoading, error };
 }

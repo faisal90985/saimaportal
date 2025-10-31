@@ -1,6 +1,6 @@
 'use client';
 
-import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
+import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect, useCallback } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
@@ -157,10 +157,17 @@ export const useFirebaseApp = (): FirebaseApp => {
 type MemoFirebase <T> = T & {__memo?: boolean};
 
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
-  const memoized = useMemo(factory, deps);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const memoizedFactory = useCallback(factory, deps);
+  const memoized = useMemo(memoizedFactory, [memoizedFactory]);
   
   if(typeof memoized !== 'object' || memoized === null) return memoized;
-  (memoized as MemoFirebase<T>).__memo = true;
+
+  try {
+    (memoized as MemoFirebase<T>).__memo = true;
+  } catch (e) {
+    // This can happen if the memoized object is frozen
+  }
   
   return memoized;
 }
