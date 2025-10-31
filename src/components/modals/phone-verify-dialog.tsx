@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { CardDescription, CardTitle } from '../ui/card';
 
 interface PhoneVerifyDialogProps {
   isOpen: boolean;
