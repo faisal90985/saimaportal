@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/header';
 import BottomNav from '@/components/bottom-nav';
 import VillaLocatorTab from '@/components/tabs/villa-locator-tab';
@@ -13,7 +13,10 @@ import MasjidModal from '@/components/modals/masjid-modal';
 import SaimaMartModal from '@/components/modals/saima-mart-modal';
 import { Button } from '@/components/ui/button';
 import type { Tab, MartStatus } from '@/app/lib/types';
-import { approvedPhones as initialApprovedPhones, managementPassword as initialManagementPassword } from '@/app/lib/data';
+import { useUser, useDoc, useAuth, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, collection, getDocs, query, where } from 'firebase/firestore';
+import { signInAnonymously } from 'firebase/auth';
+
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('villa-locator');
@@ -21,24 +24,43 @@ export default function Home() {
   const [showSaimaMartModal, setShowSaimaMartModal] = useState(false);
   const [martStatus, setMartStatus] = useState<MartStatus>('Closed');
 
-  // Authentication and data states that would typically come from a context or backend
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const firestore = useFirestore();
+
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [isManagementLoggedIn, setIsManagementLoggedIn] = useState(false);
-  const [approvedPhones, setApprovedPhones] = useState(initialApprovedPhones);
-  const [managementPassword, setManagementPassword] = useState(initialManagementPassword);
+  const [isMartOwnerLoggedIn, setIsMartOwnerLoggedIn] = useState(false);
+
+  // Sign in anonymously if not logged in
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      signInAnonymously(auth);
+    }
+  }, [user, isUserLoading, auth]);
+
+  const martStatusRef = useMemoFirebase(() => firestore ? doc(firestore, 'martStatus', 'status') : null, [firestore]);
+  const { data: martStatusData } = useDoc<{ isOpen: MartStatus }>(martStatusRef);
+  
+  useEffect(() => {
+    if (martStatusData) {
+      setMartStatus(martStatusData.isOpen);
+    }
+  }, [martStatusData]);
 
   const authProps = {
     isAdminLoggedIn,
     setIsAdminLoggedIn,
     isManagementLoggedIn,
     setIsManagementLoggedIn,
-    approvedPhones,
-    setApprovedPhones,
-    managementPassword,
-    setManagementPassword,
+    isMartOwnerLoggedIn,
+    setIsMartOwnerLoggedIn
   };
 
   const renderTabContent = () => {
+    if (isUserLoading) {
+      return <div className="flex justify-center items-center h-full">Loading...</div>;
+    }
     switch (activeTab) {
       case 'villa-locator':
         return <VillaLocatorTab {...authProps} />;
@@ -89,7 +111,7 @@ export default function Home() {
         onOpenChange={setShowSaimaMartModal}
         martStatus={martStatus}
         setMartStatus={setMartStatus}
-        isAdminLoggedIn={isAdminLoggedIn}
+        {...authProps}
       />
 
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />

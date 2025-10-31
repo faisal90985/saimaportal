@@ -6,25 +6,31 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { AuthProps } from '@/app/lib/types';
-import { adminPassword as pw } from '@/app/lib/data';
 import { Separator } from '@/components/ui/separator';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const AdminTab = ({
   isAdminLoggedIn,
   setIsAdminLoggedIn,
   isManagementLoggedIn,
-  approvedPhones,
-  setApprovedPhones,
-  managementPassword,
-  setManagementPassword,
-}: AuthProps) => {
+  setIsManagementLoggedIn
+}: Omit<AuthProps, 'isMartOwnerLoggedIn' | 'setIsMartOwnerLoggedIn'>) => {
   const [password, setPassword] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newMgmtPassword, setNewMgmtPassword] = useState('');
   const { toast } = useToast();
+  const firestore = useFirestore();
+
+  const adminPasswordQuery = useMemoFirebase(() => firestore ? doc(firestore, 'adminPasswords', 'password') : null, [firestore]);
+  const { data: adminPasswordDoc } = useCollection(adminPasswordQuery);
+
+  const approvedPhonesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'approvedPhones') : null, [firestore]);
+  const { data: approvedPhones, isLoading: phonesLoading } = useCollection(approvedPhonesQuery);
 
   const handleAdminLogin = () => {
-    if (password === pw) {
+    if (adminPasswordDoc && password === adminPasswordDoc[0].password) {
       setIsAdminLoggedIn(true);
       toast({ title: "Admin login successful." });
     } else {
@@ -34,11 +40,13 @@ const AdminTab = ({
   };
   
   const approvePhoneNumber = () => {
-    if (newPhone && !approvedPhones.includes(newPhone)) {
-        setApprovedPhones([...approvedPhones, newPhone]);
+    if (!firestore) return;
+    if (newPhone && !approvedPhones?.some(p => p.id === newPhone)) {
+        const phoneRef = doc(firestore, 'approvedPhones', newPhone);
+        setDocumentNonBlocking(phoneRef, { phone: newPhone }, {});
         toast({ title: `Phone number ${newPhone} approved.` });
         setNewPhone('');
-    } else if (approvedPhones.includes(newPhone)) {
+    } else if (approvedPhones?.some(p => p.id === newPhone)) {
         toast({ title: 'This phone number is already approved!', variant: 'destructive' });
     } else {
         toast({ title: 'Please enter a phone number.', variant: 'destructive' });
@@ -46,13 +54,17 @@ const AdminTab = ({
   };
 
   const removeApprovedPhone = (phoneToRemove: string) => {
-    setApprovedPhones(approvedPhones.filter(p => p !== phoneToRemove));
+    if (!firestore) return;
+    const phoneRef = doc(firestore, 'approvedPhones', phoneToRemove);
+    deleteDocumentNonBlocking(phoneRef);
     toast({ title: `Phone number ${phoneToRemove} removed.` });
   };
   
   const handleSetManagementPassword = () => {
+    if (!firestore) return;
     if (newMgmtPassword) {
-        setManagementPassword(newMgmtPassword);
+        const mgmtPassRef = doc(firestore, 'managementPasswords', 'password');
+        setDocumentNonBlocking(mgmtPassRef, { password: newMgmtPassword }, {});
         toast({ title: "Management password updated successfully." });
         setNewMgmtPassword('');
     } else {
@@ -108,13 +120,13 @@ const AdminTab = ({
             <Button onClick={approvePhoneNumber}>Approve</Button>
           </div>
           <Separator />
-          <h4 className="font-medium">Approved Phone Numbers ({approvedPhones.length})</h4>
+          <h4 className="font-medium">Approved Phone Numbers ({approvedPhones?.length || 0})</h4>
           <div className="space-y-2 max-h-48 overflow-y-auto">
-            {approvedPhones.length > 0 ? (
+            {phonesLoading ? <p>Loading...</p> : approvedPhones && approvedPhones.length > 0 ? (
                 approvedPhones.map((phone) => (
-                    <div key={phone} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
-                        <span className="font-mono text-sm">{phone}</span>
-                        <Button variant="destructive" size="sm" onClick={() => removeApprovedPhone(phone)}>Remove</Button>
+                    <div key={phone.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-md">
+                        <span className="font-mono text-sm">{phone.id}</span>
+                        <Button variant="destructive" size="sm" onClick={() => removeApprovedPhone(phone.id)}>Remove</Button>
                     </div>
                 ))
             ) : (
@@ -142,7 +154,7 @@ const AdminTab = ({
         </CardContent>
       </Card>
       
-       <Button variant="outline" className="w-full" onClick={() => setIsAdminLoggedIn(false)}>Logout</Button>
+       <Button variant="outline" className="w-full" onClick={() => { setIsAdminLoggedIn(false); if (isManagementLoggedIn) setIsManagementLoggedIn(false); }}>Logout</Button>
     </div>
   );
 };

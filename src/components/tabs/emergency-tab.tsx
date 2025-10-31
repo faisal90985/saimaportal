@@ -5,19 +5,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import type { AuthProps, EmergencyContact } from '@/app/lib/types';
-import { emergencyContacts as initialContacts } from '@/app/lib/data';
 import EmergencyContactCard from '@/components/emergency-contact-card';
 import EmergencyContactFormDialog from '@/components/modals/emergency-contact-form-dialog';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 
 const EmergencyTab = ({isAdminLoggedIn, isManagementLoggedIn}: AuthProps) => {
-    const [contacts, setContacts] = useState<EmergencyContact[]>(initialContacts);
+    const firestore = useFirestore();
     const [isFormOpen, setIsFormOpen] = useState(false);
+
+    const contactsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'emergencyContacts'), orderBy('name'));
+    }, [firestore]);
+
+    const { data: contacts, isLoading } = useCollection<EmergencyContact>(contactsQuery);
 
     const canAddContact = isAdminLoggedIn || isManagementLoggedIn;
 
     const handleSaveContact = (newContact: EmergencyContact) => {
-        setContacts([...contacts, newContact]);
+        if (!firestore) return;
+        const contactsRef = collection(firestore, 'emergencyContacts');
+        addDocumentNonBlocking(contactsRef, newContact);
         setIsFormOpen(false);
     }
   
@@ -34,7 +45,8 @@ const EmergencyTab = ({isAdminLoggedIn, isManagementLoggedIn}: AuthProps) => {
           )}
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {contacts.map(contact => (
+          {isLoading && <p>Loading contacts...</p>}
+          {!isLoading && contacts && contacts.map(contact => (
             <EmergencyContactCard key={contact.id} contact={contact} />
           ))}
         </CardContent>

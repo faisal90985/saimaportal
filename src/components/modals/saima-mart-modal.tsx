@@ -7,24 +7,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { martStatuses, type MartStatus } from '@/app/lib/types';
+import { martStatuses, type MartStatus, type AuthProps } from '@/app/lib/types';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-interface SaimaMartModalProps {
+interface SaimaMartModalProps extends Omit<AuthProps, 'isManagementLoggedIn' | 'setIsManagementLoggedIn'> {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   martStatus: MartStatus;
   setMartStatus: (status: MartStatus) => void;
-  isAdminLoggedIn: boolean;
 }
 
-const MART_OWNER_PASSWORD = "salesman";
-
-const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdminLoggedIn }: SaimaMartModalProps) => {
-  const [isOwnerLoggedIn, setIsOwnerLoggedIn] = useState(false);
+const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdminLoggedIn, isMartOwnerLoggedIn, setIsMartOwnerLoggedIn }: SaimaMartModalProps) => {
   const [password, setPassword] = useState('');
   const { toast } = useToast();
+  const firestore = useFirestore();
 
-  const canManage = isOwnerLoggedIn || isAdminLoggedIn;
+  const martOwnerPasswordQuery = useMemoFirebase(() => firestore ? doc(firestore, 'martPasswords', 'password') : null, [firestore]);
+  const { data: martOwnerPasswordDoc } = useDoc(martOwnerPasswordQuery);
+
+  const canManage = isMartOwnerLoggedIn || isAdminLoggedIn;
 
   const getStatusText = (status: MartStatus) => {
     switch (status) {
@@ -56,8 +59,8 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
   };
 
   const handleLogin = () => {
-    if (password === MART_OWNER_PASSWORD) {
-      setIsOwnerLoggedIn(true);
+    if (martOwnerPasswordDoc && password === martOwnerPasswordDoc.password) {
+      setIsMartOwnerLoggedIn(true);
       toast({ title: 'Mart owner login successful.' });
       setPassword('');
     } else {
@@ -67,7 +70,14 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
   };
   
   const handleLogout = () => {
-    setIsOwnerLoggedIn(false);
+    setIsMartOwnerLoggedIn(false);
+  }
+
+  const handleStatusUpdate = (newStatus: MartStatus) => {
+    if (!firestore) return;
+    setMartStatus(newStatus);
+    const martStatusRef = doc(firestore, 'martStatus', 'status');
+    setDocumentNonBlocking(martStatusRef, { isOpen: newStatus, lastUpdated: Date.now() }, { merge: true });
   }
 
   const handleOpenChange = (open: boolean) => {
@@ -75,7 +85,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
     if (!open) {
       // Reset login state when modal is closed, unless admin is logged in globally
       if (!isAdminLoggedIn) {
-        setIsOwnerLoggedIn(false);
+        setIsMartOwnerLoggedIn(false);
       }
       setPassword('');
     }
@@ -110,7 +120,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
                 <Label className="mb-4 block text-center">Update Mart Status</Label>
                 <RadioGroup
                     value={martStatus}
-                    onValueChange={(value: MartStatus) => setMartStatus(value)}
+                    onValueChange={(value: MartStatus) => handleStatusUpdate(value)}
                     className="grid grid-cols-2 gap-4"
                 >
                     {martStatuses.map((status) => (
@@ -121,7 +131,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
                     ))}
                 </RadioGroup>
             </div>
-            {isOwnerLoggedIn && !isAdminLoggedIn && <Button variant="outline" className="w-full" onClick={handleLogout}>Owner Logout</Button>}
+            {isMartOwnerLoggedIn && !isAdminLoggedIn && <Button variant="outline" className="w-full" onClick={handleLogout}>Owner Logout</Button>}
           </div>
         ) : (
           <div className="space-y-4">

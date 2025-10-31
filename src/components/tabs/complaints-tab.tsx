@@ -1,20 +1,49 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { complaints as initialComplaints, villaData } from '@/app/lib/data';
-import type { Complaint, AuthProps } from '@/app/lib/types';
+import { villaData as initialVillaData } from '@/app/lib/data';
+import type { Complaint, AuthProps, VillaData } from '@/app/lib/types';
 import { PlusCircle, FileText } from 'lucide-react';
 import PhoneVerifyDialog from '@/components/modals/phone-verify-dialog';
 import ComplaintFormDialog from '@/components/modals/complaint-form-dialog';
 import ComplaintCard from '@/components/complaint-card';
+import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-const ComplaintsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => {
-  const [complaints, setComplaints] = useState<Complaint[]>(initialComplaints);
+const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => {
+  const firestore = useFirestore();
+  const { user } = useUser();
   const [dialog, setDialog] = useState<'verify' | 'form' | null>(null);
   const [editingComplaint, setEditingComplaint] = useState<Complaint | null>(null);
   const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
+  const [villaData, setVillaData] = useState<VillaData>({});
+
+  const complaintsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'complaints'), orderBy('timestamp', 'desc'));
+  }, [firestore]);
+
+  const { data: complaints, isLoading } = useCollection<Complaint>(complaintsQuery);
+
+  const villasQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'villas');
+  }, [firestore]);
+  const { data: villasData } = useCollection<any>(villasQuery);
+
+  useState(() => {
+    if (villasData) {
+      const data: VillaData = {};
+      villasData.forEach(villa => {
+        data[villa.id] = villa;
+      });
+      setVillaData(data);
+    }
+  });
+
 
   const handlePostComplaintClick = () => {
     setEditingComplaint(null);
@@ -27,17 +56,22 @@ const ComplaintsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLoggedIn }
   };
 
   const handleSaveComplaint = (newComplaint: Complaint) => {
+    if (!firestore) return;
     if (editingComplaint) {
-      setComplaints(complaints.map(c => c.id === newComplaint.id ? newComplaint : c));
+      const complaintRef = doc(firestore, 'complaints', newComplaint.id);
+      setDocumentNonBlocking(complaintRef, newComplaint, { merge: true });
     } else {
-      setComplaints([...complaints, newComplaint]);
+      const complaintsRef = collection(firestore, 'complaints');
+      addDocumentNonBlocking(complaintsRef, newComplaint);
     }
     setDialog(null);
     setEditingComplaint(null);
   };
 
   const handleDeleteComplaint = (id: string) => {
-    setComplaints(complaints.filter(c => c.id !== id));
+    if (!firestore) return;
+    const complaintRef = doc(firestore, 'complaints', id);
+    deleteDocumentNonBlocking(complaintRef);
   };
   
   const handleEditComplaint = (complaint: Complaint) => {
@@ -46,16 +80,13 @@ const ComplaintsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLoggedIn }
   };
 
   const handleStatusChange = (id: string, field: 'noted' | 'resolved', value: boolean) => {
-    setComplaints(complaints.map(c => {
-      if (c.id === id) {
-        const updatedComplaint = { ...c, [field]: value };
-        if (field === 'resolved' && value) {
-          updatedComplaint.resolvedDate = Date.now();
-        }
-        return updatedComplaint;
-      }
-      return c;
-    }));
+    if (!firestore) return;
+    const complaintRef = doc(firestore, 'complaints', id);
+    const updateData: any = { [field]: value };
+    if (field === 'resolved' && value) {
+      updateData.resolvedDate = Date.now();
+    }
+    updateDocumentNonBlocking(complaintRef, updateData);
   };
 
   return (
@@ -69,8 +100,9 @@ const ComplaintsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLoggedIn }
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          {complaints.length > 0 ? (
-            complaints.sort((a, b) => b.timestamp - a.timestamp).map(complaint => (
+          {isLoading && <p>Loading complaints...</p>}
+          {!isLoading && complaints && complaints.length > 0 ? (
+            complaints.map(complaint => (
               <ComplaintCard
                 key={complaint.id}
                 complaint={complaint}
@@ -81,10 +113,12 @@ const ComplaintsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLoggedIn }
               />
             ))
           ) : (
+            !isLoading && (
             <div className="text-center text-muted-foreground py-10">
               <FileText className="mx-auto h-12 w-12" />
               <p className="mt-4">No complaints submitted yet.</p>
             </div>
+            )
           )}
         </CardContent>
       </Card>
@@ -92,7 +126,7 @@ const ComplaintsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLoggedIn }
       <PhoneVerifyDialog
         isOpen={dialog === 'verify'}
         onOpenChange={(open) => !open && setDialog(null)}
-        approvedPhones={approvedPhones}
+        approvedPhones={[]} // Replace with real approved phones from firebase
         onVerifySuccess={handleVerifySuccess}
         purpose="post a complaint"
       />

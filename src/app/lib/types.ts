@@ -1,6 +1,7 @@
 export type Tab = 'villa-locator' | 'advertisements' | 'management' | 'complaints' | 'emergency' | 'admin';
 
 export interface Villa {
+  id?: string;
   category: string;
   street: string;
   block: string;
@@ -16,7 +17,7 @@ export interface Ad {
   id: string;
   category: AdCategory;
   title: string;
-  description: string;
+  description:string;
   phone: string;
   expiry: number;
   // Car Pooling specific
@@ -69,7 +70,7 @@ export const contactTypes: ContactType[] = ["Plumber", "Electrician", "Maid", "C
 export interface NamazTimings {
   fajr: string;
   zuhar: string;
-asar: string;
+  asar: string;
   maghrib: string;
   isha: string;
   jumma: string;
@@ -87,10 +88,7 @@ export interface AuthProps {
   setIsAdminLoggedIn: (value: boolean) => void;
   isManagementLoggedIn: boolean;
   setIsManagementLoggedIn: (value: boolean) => void;
-  approvedPhones: string[];
-  setApprovedPhones: (phones: string[]) => void;
-  managementPassword: string;
-  setManagementPassword: (password: string) => void;
+  isMartOwnerLoggedIn: boolean;
+  setIsMartOwnerLoggedIn: (value: boolean) => void;
 }
-
     

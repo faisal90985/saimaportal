@@ -15,10 +15,9 @@ interface AdCardProps {
   onEdit: (ad: Ad) => void;
   onDelete: (id: string) => void;
   isAdmin: boolean;
-  approvedPhones: string[];
 }
 
-const AdCard = ({ ad, onEdit, onDelete, isAdmin, approvedPhones }: AdCardProps) => {
+const AdCard = ({ ad, onEdit, onDelete, isAdmin }: AdCardProps) => {
   const { toast } = useToast();
   const [isVerifying, setIsVerifying] = useState(false);
   const [phone, setPhone] = useState('');

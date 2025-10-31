@@ -6,27 +6,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import type { Ad } from '@/app/lib/types';
+import { useFirestore } from '@/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface PhoneVerifyDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  approvedPhones: string[];
   onVerifySuccess: (phone: string) => void;
   editingAd?: Ad | null;
   purpose?: string;
 }
 
-const PhoneVerifyDialog = ({ isOpen, onOpenChange, approvedPhones, onVerifySuccess, editingAd, purpose = "post an ad" }: PhoneVerifyDialogProps) => {
+const PhoneVerifyDialog = ({ isOpen, onOpenChange, onVerifySuccess, editingAd, purpose = "post an ad" }: PhoneVerifyDialogProps) => {
   const [phone, setPhone] = useState('');
   const { toast } = useToast();
+  const firestore = useFirestore();
 
-  const handleVerify = () => {
-    if (!phone) {
+  const handleVerify = async () => {
+    if (!phone || !firestore) {
       toast({ title: 'Please enter your phone number.', variant: 'destructive' });
       return;
     }
 
-    // If editing, the check is different. The phone must match the ad's phone.
     if (editingAd) {
       if(editingAd.phone === phone) {
         toast({ title: 'Verification successful.' });
@@ -34,14 +35,20 @@ const PhoneVerifyDialog = ({ isOpen, onOpenChange, approvedPhones, onVerifySucce
       } else {
         toast({ title: 'This phone number does not match the ad creator.', variant: 'destructive' });
       }
-    } else {
-      // If creating, check against the approved list.
-      if (approvedPhones.includes(phone)) {
-        toast({ title: 'Verification successful.' });
-        onVerifySuccess(phone);
-      } else {
-        toast({ title: 'This phone number is not approved.', description: 'Please contact admin for approval.', variant: 'destructive' });
-      }
+      return;
+    }
+
+    const phoneRef = doc(firestore, 'approvedPhones', phone);
+    try {
+        const docSnap = await getDoc(phoneRef);
+        if(docSnap.exists()) {
+            toast({ title: 'Verification successful.' });
+            onVerifySuccess(phone);
+        } else {
+            toast({ title: 'This phone number is not approved.', description: 'Please contact admin for approval.', variant: 'destructive' });
+        }
+    } catch (e) {
+        toast({ title: 'Could not verify phone number.', variant: 'destructive' });
     }
   };
   

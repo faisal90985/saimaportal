@@ -1,30 +1,46 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { namazTimings as initialTimings } from '@/app/lib/data';
 import type { NamazTimings, AuthProps } from '@/app/lib/types';
 import { Separator } from '../ui/separator';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-interface MasjidModalProps extends AuthProps {
+interface MasjidModalProps extends Omit<AuthProps, 'isManagementLoggedIn' | 'setIsManagementLoggedIn' | 'isMartOwnerLoggedIn' | 'setIsMartOwnerLoggedIn'>{
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 const MasjidModal = ({ isOpen, onOpenChange, isAdminLoggedIn }: MasjidModalProps) => {
-  const [timings, setTimings] = useState<NamazTimings>(initialTimings);
+  const firestore = useFirestore();
+  const timingsRef = useMemoFirebase(() => firestore ? doc(firestore, 'namazTimings', 'times') : null, [firestore]);
+  const { data: timingsData, isLoading } = useDoc<NamazTimings>(timingsRef);
+
+  const [timings, setTimings] = useState<NamazTimings | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [editedTimings, setEditedTimings] = useState<NamazTimings>(timings);
+  const [editedTimings, setEditedTimings] = useState<NamazTimings | null>(null);
   const { toast } = useToast();
+  
+  useEffect(() => {
+    if (timingsData) {
+      setTimings(timingsData);
+      setEditedTimings(timingsData);
+    }
+  }, [timingsData]);
 
   const handleSave = () => {
-    setTimings(editedTimings);
-    setEditMode(false);
-    toast({ title: 'Namaz timings updated successfully.' });
+    if (editedTimings && firestore) {
+      setDocumentNonBlocking(doc(firestore, 'namazTimings', 'times'), editedTimings, { merge: true });
+      setTimings(editedTimings);
+      setEditMode(false);
+      toast({ title: 'Namaz timings updated successfully.' });
+    }
   };
   
   const handleCancel = () => {
@@ -35,6 +51,7 @@ const MasjidModal = ({ isOpen, onOpenChange, isAdminLoggedIn }: MasjidModalProps
   const formatTime = (timeStr: string) => {
     if (!timeStr) return "Not set";
     const [hours, minutes] = timeStr.split(':');
+    if(isNaN(parseInt(hours)) || isNaN(parseInt(minutes))) return "Invalid Time";
     const date = new Date();
     date.setHours(parseInt(hours));
     date.setMinutes(parseInt(minutes));
@@ -43,8 +60,18 @@ const MasjidModal = ({ isOpen, onOpenChange, isAdminLoggedIn }: MasjidModalProps
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditedTimings(prev => ({...prev, [name]: value}));
+    if(editedTimings) {
+      setEditedTimings(prev => ({...prev!, [name]: value}));
+    }
   };
+
+  if (isLoading || !timings || !editedTimings) {
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent><DialogHeader><DialogTitle>Loading Timings...</DialogTitle></DialogHeader></DialogContent>
+        </Dialog>
+    )
+  }
 
   const namazRows = [
     { name: 'Fajr', time: formatTime(timings.fajr) },

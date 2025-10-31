@@ -4,29 +4,33 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { adCategories, type AdCategory, type AuthProps, type Ad } from '@/app/lib/types';
-import { advertisements as initialAds } from '@/app/lib/data';
 import AdFormDialog from '@/components/modals/ad-form-dialog';
 import PhoneVerifyDialog from '@/components/modals/phone-verify-dialog';
 import AdCard from '@/components/ad-card';
 import { PlusCircle, Megaphone } from 'lucide-react';
+import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc } from 'firebase/firestore';
 
-const AdvertisementsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => {
-  const [ads, setAds] = useState<Ad[]>(initialAds);
-  const [filteredAds, setFilteredAds] = useState<Ad[]>([]);
+const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => {
+  const firestore = useFirestore();
+  const { user } = useUser();
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'All Ads'>('All Ads');
   const [dialog, setDialog] = useState<'verify' | 'form' | null>(null);
   const [editingAd, setEditingAd] = useState<Ad | null>(null);
   const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
   
-  useEffect(() => {
-    const now = Date.now();
-    const activeAds = ads.filter(ad => ad.expiry > now);
+  const adsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    const adsRef = collection(firestore, 'advertisements');
     if (selectedCategory === 'All Ads') {
-      setFilteredAds(activeAds.sort((a, b) => b.expiry - a.expiry));
-    } else {
-      setFilteredAds(activeAds.filter(ad => ad.category === selectedCategory).sort((a, b) => b.expiry - a.expiry));
+        return query(adsRef, where('expiry', '>', Date.now()), orderBy('expiry', 'desc'));
     }
-  }, [ads, selectedCategory]);
+    return query(adsRef, where('category', '==', selectedCategory), where('expiry', '>', Date.now()), orderBy('expiry', 'desc'));
+  }, [firestore, selectedCategory]);
+
+  const { data: ads, isLoading } = useCollection<Ad>(adsQuery);
 
   const handlePostAdClick = () => {
     setEditingAd(null);
@@ -44,10 +48,13 @@ const AdvertisementsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLogged
   };
 
   const handleSaveAd = (newAd: Ad) => {
+    if (!firestore) return;
     if (editingAd) {
-      setAds(ads.map(ad => ad.id === newAd.id ? newAd : ad));
+      const adRef = doc(firestore, 'advertisements', newAd.id);
+      setDocumentNonBlocking(adRef, newAd, { merge: true });
     } else {
-      setAds([...ads, newAd]);
+      const adsRef = collection(firestore, 'advertisements');
+      addDocumentNonBlocking(adsRef, newAd);
     }
     setDialog(null);
     setEditingAd(null);
@@ -55,7 +62,9 @@ const AdvertisementsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLogged
   };
 
   const handleDeleteAd = (id: string) => {
-    setAds(ads.filter(ad => ad.id !== id));
+    if (!firestore) return;
+    const adRef = doc(firestore, 'advertisements', id);
+    deleteDocumentNonBlocking(adRef);
   };
   
   const handleEditAd = (ad: Ad) => {
@@ -64,8 +73,6 @@ const AdvertisementsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLogged
         setVerifiedPhone(ad.phone);
         setDialog('form');
     } else {
-        // For regular users, verification is handled inside AdCard
-        // This direct call to form is for when verification inside card succeeds
         setVerifiedPhone(ad.phone);
         setDialog('form');
     }
@@ -108,22 +115,25 @@ const AdvertisementsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLogged
             ))}
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            {filteredAds.length > 0 ? (
-              filteredAds.map(ad => (
+            {isLoading && <p>Loading ads...</p>}
+            {!isLoading && ads && ads.length > 0 ? (
+              ads.map(ad => (
                 <AdCard 
                   key={ad.id} 
                   ad={ad} 
                   onEdit={handleEditAd} 
                   onDelete={handleDeleteAd}
                   isAdmin={isAdminLoggedIn || isManagementLoggedIn}
-                  approvedPhones={approvedPhones}
+                  approvedPhones={[]} // This should be replaced with logic for approved phones
                 />
               ))
             ) : (
+             !isLoading && (
               <div className="col-span-full text-center text-muted-foreground py-10">
                 <Megaphone className="mx-auto h-12 w-12" />
                 <p className="mt-4">No advertisements in this category.</p>
               </div>
+             )
             )}
           </div>
         </CardContent>
@@ -132,7 +142,6 @@ const AdvertisementsTab = ({ approvedPhones, isAdminLoggedIn, isManagementLogged
       <PhoneVerifyDialog
         isOpen={dialog === 'verify'}
         onOpenChange={(open) => !open && handleDialogClose()}
-        approvedPhones={approvedPhones}
         onVerifySuccess={handleVerifySuccess}
         editingAd={editingAd}
         purpose="post an ad"

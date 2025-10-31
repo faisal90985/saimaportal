@@ -7,18 +7,27 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { managementPosts as initialPosts, postTypes } from '@/app/lib/data';
+import { postTypes } from '@/app/lib/data';
 import type { ManagementPost, AuthProps, PostType } from '@/app/lib/types';
 import ManagementPostCard from '@/components/management-post-card';
+import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const ManagementTab = ({ 
     isManagementLoggedIn, 
-    setIsManagementLoggedIn, 
-    managementPassword: pw 
-}: AuthProps) => {
+    setIsManagementLoggedIn,
+}: Omit<AuthProps, 'isAdminLoggedIn' | 'setIsAdminLoggedIn' | 'isMartOwnerLoggedIn' | 'setIsMartOwnerLoggedIn'>) => {
   const [password, setPassword] = useState('');
   const { toast } = useToast();
-  const [posts, setPosts] = useState<ManagementPost[]>(initialPosts);
+  const firestore = useFirestore();
+  
+  const postsQuery = useMemoFirebase(() => {
+      if (!firestore) return null;
+      return query(collection(firestore, 'managementPosts'), orderBy('timestamp', 'desc'));
+  }, [firestore]);
+  
+  const { data: posts, isLoading } = useCollection<ManagementPost>(postsQuery);
   const [showForm, setShowForm] = useState(false);
   
   // Form state
@@ -26,16 +35,19 @@ const ManagementTab = ({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [type, setType] = useState<PostType | ''>('');
+  
+  const managementPasswordQuery = useMemoFirebase(() => firestore ? doc(firestore, 'managementPasswords', 'password') : null, [firestore]);
+  const { data: managementPasswordDoc } = useCollection(managementPasswordQuery);
 
 
   const handleManagementLogin = () => {
-    if (password === pw) {
-      setIsManagementLoggedIn(true);
-      toast({ title: "Management login successful." });
-    } else {
-      toast({ title: "Invalid management password.", variant: "destructive" });
-    }
-    setPassword('');
+      if (managementPasswordDoc && password === managementPasswordDoc[0].password) {
+        setIsManagementLoggedIn(true);
+        toast({ title: "Management login successful." });
+      } else {
+        toast({ title: "Invalid management password.", variant: "destructive" });
+      }
+      setPassword('');
   };
   
   const resetForm = () => {
@@ -48,7 +60,7 @@ const ManagementTab = ({
 
   const handlePostSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !content || !type) {
+    if (!title || !content || !type || !firestore) {
       toast({ title: "Please fill all fields.", variant: "destructive" });
       return;
     }
@@ -61,11 +73,13 @@ const ManagementTab = ({
       timestamp: Date.now(),
     };
     
+    const postRef = doc(firestore, 'managementPosts', post.id);
+
     if (editingPost) {
-        setPosts(posts.map(p => p.id === post.id ? post : p));
+        setDocumentNonBlocking(postRef, post, { merge: true });
         toast({ title: "Post updated successfully." });
     } else {
-        setPosts([post, ...posts]);
+        setDocumentNonBlocking(postRef, post, {});
         toast({ title: "Post published successfully." });
     }
     resetForm();
@@ -81,8 +95,9 @@ const ManagementTab = ({
   }
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
-        setPosts(posts.filter(p => p.id !== id));
+    if (window.confirm("Are you sure you want to delete this post?") && firestore) {
+        const postRef = doc(firestore, 'managementPosts', id);
+        deleteDocumentNonBlocking(postRef);
         toast({ title: "Post deleted." });
     }
   }
@@ -112,7 +127,8 @@ const ManagementTab = ({
                     <CardTitle className="font-headline">Management Updates</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {posts.sort((a,b) => b.timestamp - a.timestamp).map(post => (
+                    {isLoading && <p>Loading posts...</p>}
+                    {!isLoading && posts && posts.map(post => (
                         <ManagementPostCard key={post.id} post={post} canManage={false} />
                     ))}
                 </CardContent>
@@ -156,7 +172,8 @@ const ManagementTab = ({
                 <CardTitle className="font-headline">Published Updates</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                {posts.sort((a,b) => b.timestamp - a.timestamp).map(post => (
+                {isLoading && <p>Loading posts...</p>}
+                {!isLoading && posts && posts.map(post => (
                     <ManagementPostCard key={post.id} post={post} canManage={true} onEdit={handleEdit} onDelete={handleDelete} />
                 ))}
             </CardContent>
@@ -167,5 +184,3 @@ const ManagementTab = ({
 };
 
 export default ManagementTab;
-
-    
