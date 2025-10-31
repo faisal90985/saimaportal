@@ -13,9 +13,10 @@
  * - /approvedPhones/{approvedPhoneId}: List of approved phone numbers; write-restricted to prevent unauthorized ad creation.
  * - /managementPasswords/{managementPasswordId}: List of management passwords; write-restricted to prevent unauthorized management actions.
  * - /martStatus/{martStatusId}: Publicly readable mart status; write-restricted to prevent unauthorized status changes.
+ * - /namazTimings/{timingId}: Publicly readable prayer timings.
  *
  * @Key Security Decisions:
- * - Public Read Access: Villas, advertisements, management posts, complaints, emergency contacts, and the mart status are all publicly readable, even by unauthenticated users.
+ * - Public Read Access: Villas, advertisements, management posts, complaints, emergency contacts, mart status, and prayer timings are all publicly readable, even by unauthenticated users.
  * - Role-Based Writes: Advertisement, Complaint, and EmergencyContact creation are controlled by the presence of a phone number in the /approvedPhones collection. ManagementPost creation and Complaint resolution are controlled by the presence of a valid management password in the /managementPasswords collection.
  * - Denormalization for Authorization: The approvedPhones and managementPasswords collections act as denormalized role stores, enabling fast existence checks during write operations without the need for costly or impossible queries.
  */
@@ -133,6 +134,18 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    /**
+     * @description Allows public read access to Namaz timings. Write access is restricted.
+     * @path /namazTimings/{timingId}
+     * @allow (get, list): Any user can read Namaz timings.
+     * @deny (create, update, delete): No user can create, update, or delete Namaz timings.
+     * @principle Public read access with restricted writes for Namaz timings.
+     */
+    match /namazTimings/{timingId} {
+        allow get, list: if true;
+        allow create, update, delete: if false;
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
@@ -146,3 +159,4 @@ service cloud.firestore {
     }
   }
 }
+    
