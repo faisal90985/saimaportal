@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { AuthProps } from '@/app/lib/types';
 import { Separator } from '@/components/ui/separator';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
@@ -24,13 +24,13 @@ const AdminTab = ({
   const firestore = useFirestore();
 
   const adminPasswordQuery = useMemoFirebase(() => firestore ? doc(firestore, 'adminPasswords', 'password') : null, [firestore]);
-  const { data: adminPasswordDoc } = useCollection(adminPasswordQuery);
+  const { data: adminPasswordDoc } = useDoc<{password: string}>(adminPasswordQuery);
 
   const approvedPhonesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'approvedPhones') : null, [firestore]);
   const { data: approvedPhones, isLoading: phonesLoading } = useCollection(approvedPhonesQuery);
 
   const handleAdminLogin = () => {
-    if (adminPasswordDoc && password === adminPasswordDoc[0].password) {
+    if (adminPasswordDoc && password === adminPasswordDoc.password) {
       setIsAdminLoggedIn(true);
       toast({ title: "Admin login successful." });
     } else {

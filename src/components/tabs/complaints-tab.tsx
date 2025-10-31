@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { villaData as initialVillaData } from '@/app/lib/data';
@@ -34,7 +34,7 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
   }, [firestore]);
   const { data: villasData } = useCollection<any>(villasQuery);
 
-  useState(() => {
+  useEffect(() => {
     if (villasData) {
       const data: VillaData = {};
       villasData.forEach(villa => {
@@ -42,7 +42,7 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
       });
       setVillaData(data);
     }
-  });
+  },[villasData]);
 
 
   const handlePostComplaintClick = () => {
@@ -61,8 +61,8 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
       const complaintRef = doc(firestore, 'complaints', newComplaint.id);
       setDocumentNonBlocking(complaintRef, newComplaint, { merge: true });
     } else {
-      const complaintsRef = collection(firestore, 'complaints');
-      addDocumentNonBlocking(complaintsRef, newComplaint);
+      const complaintRef = doc(collection(firestore, 'complaints'), newComplaint.id);
+      setDocumentNonBlocking(complaintRef, newComplaint, {});
     }
     setDialog(null);
     setEditingComplaint(null);
@@ -126,7 +126,6 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
       <PhoneVerifyDialog
         isOpen={dialog === 'verify'}
         onOpenChange={(open) => !open && setDialog(null)}
-        approvedPhones={[]} // Replace with real approved phones from firebase
         onVerifySuccess={handleVerifySuccess}
         purpose="post a complaint"
       />

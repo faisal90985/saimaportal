@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -10,9 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { postTypes } from '@/app/lib/data';
 import type { ManagementPost, AuthProps, PostType } from '@/app/lib/types';
 import ManagementPostCard from '@/components/management-post-card';
-import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
-import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const ManagementTab = ({ 
     isManagementLoggedIn, 
@@ -37,11 +38,11 @@ const ManagementTab = ({
   const [type, setType] = useState<PostType | ''>('');
   
   const managementPasswordQuery = useMemoFirebase(() => firestore ? doc(firestore, 'managementPasswords', 'password') : null, [firestore]);
-  const { data: managementPasswordDoc } = useCollection(managementPasswordQuery);
+  const { data: managementPasswordDoc } = useDoc<{password: string}>(managementPasswordQuery);
 
 
   const handleManagementLogin = () => {
-      if (managementPasswordDoc && password === managementPasswordDoc[0].password) {
+      if (managementPasswordDoc && password === managementPasswordDoc.password) {
         setIsManagementLoggedIn(true);
         toast({ title: "Management login successful." });
       } else {
@@ -184,3 +185,5 @@ const ManagementTab = ({
 };
 
 export default ManagementTab;
+
+    

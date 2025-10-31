@@ -9,9 +9,8 @@ import PhoneVerifyDialog from '@/components/modals/phone-verify-dialog';
 import AdCard from '@/components/ad-card';
 import { PlusCircle, Megaphone } from 'lucide-react';
 import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc } from 'firebase/firestore';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc } from 'firebase/firestore';
 
 const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => {
   const firestore = useFirestore();
@@ -53,8 +52,8 @@ const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps)
       const adRef = doc(firestore, 'advertisements', newAd.id);
       setDocumentNonBlocking(adRef, newAd, { merge: true });
     } else {
-      const adsRef = collection(firestore, 'advertisements');
-      addDocumentNonBlocking(adsRef, newAd);
+      const adRef = doc(collection(firestore, 'advertisements'), newAd.id);
+      setDocumentNonBlocking(adRef, newAd, {});
     }
     setDialog(null);
     setEditingAd(null);
@@ -124,7 +123,6 @@ const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps)
                   onEdit={handleEditAd} 
                   onDelete={handleDeleteAd}
                   isAdmin={isAdminLoggedIn || isManagementLoggedIn}
-                  approvedPhones={[]} // This should be replaced with logic for approved phones
                 />
               ))
             ) : (

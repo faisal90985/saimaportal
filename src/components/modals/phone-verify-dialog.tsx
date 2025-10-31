@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import type { Ad } from '@/app/lib/types';
 import { useFirestore } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -13,11 +12,10 @@ interface PhoneVerifyDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onVerifySuccess: (phone: string) => void;
-  editingAd?: Ad | null;
   purpose?: string;
 }
 
-const PhoneVerifyDialog = ({ isOpen, onOpenChange, onVerifySuccess, editingAd, purpose = "post an ad" }: PhoneVerifyDialogProps) => {
+const PhoneVerifyDialog = ({ isOpen, onOpenChange, onVerifySuccess, purpose = "post an ad" }: PhoneVerifyDialogProps) => {
   const [phone, setPhone] = useState('');
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -25,16 +23,6 @@ const PhoneVerifyDialog = ({ isOpen, onOpenChange, onVerifySuccess, editingAd, p
   const handleVerify = async () => {
     if (!phone || !firestore) {
       toast({ title: 'Please enter your phone number.', variant: 'destructive' });
-      return;
-    }
-
-    if (editingAd) {
-      if(editingAd.phone === phone) {
-        toast({ title: 'Verification successful.' });
-        onVerifySuccess(phone);
-      } else {
-        toast({ title: 'This phone number does not match the ad creator.', variant: 'destructive' });
-      }
       return;
     }
 
@@ -63,10 +51,10 @@ const PhoneVerifyDialog = ({ isOpen, onOpenChange, onVerifySuccess, editingAd, p
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-headline">Phone Verification</DialogTitle>
-          <DialogDescription>
-            {editingAd ? "To edit this ad, please re-enter your phone number." : `To ${purpose}, please enter your approved phone number.`}
-          </DialogDescription>
+          <CardTitle className="font-headline">Phone Verification</CardTitle>
+          <CardDescription>
+            {`To ${purpose}, please enter your approved phone number.`}
+          </CardDescription>
         </DialogHeader>
         <div className="space-y-4">
           <Input
