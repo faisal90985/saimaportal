@@ -10,7 +10,7 @@ import AdCard from '@/components/ad-card';
 import { PlusCircle, Megaphone } from 'lucide-react';
 import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, doc } from 'firebase/firestore';
-import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => {
   const firestore = useFirestore();
@@ -23,10 +23,11 @@ const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps)
   const adsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     const adsRef = collection(firestore, 'advertisements');
+    const now = Date.now();
     if (selectedCategory === 'All Ads') {
-        return query(adsRef, where('expiry', '>', Date.now()), orderBy('expiry', 'desc'));
+        return query(adsRef, where('expiry', '>', now), orderBy('expiry', 'desc'));
     }
-    return query(adsRef, where('category', '==', selectedCategory), where('expiry', '>', Date.now()), orderBy('expiry', 'desc'));
+    return query(adsRef, where('category', '==', selectedCategory), where('expiry', '>', now), orderBy('expiry', 'desc'));
   }, [firestore, selectedCategory]);
 
   const { data: ads, isLoading } = useCollection<Ad>(adsQuery);
@@ -48,11 +49,10 @@ const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps)
 
   const handleSaveAd = (newAd: Ad) => {
     if (!firestore) return;
+    const adRef = doc(firestore, 'advertisements', newAd.id);
     if (editingAd) {
-      const adRef = doc(firestore, 'advertisements', newAd.id);
       setDocumentNonBlocking(adRef, newAd, { merge: true });
     } else {
-      const adRef = doc(collection(firestore, 'advertisements'), newAd.id);
       setDocumentNonBlocking(adRef, newAd, {});
     }
     setDialog(null);
@@ -141,7 +141,6 @@ const AdvertisementsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps)
         isOpen={dialog === 'verify'}
         onOpenChange={(open) => !open && handleDialogClose()}
         onVerifySuccess={handleVerifySuccess}
-        editingAd={editingAd}
         purpose="post an ad"
       />
       

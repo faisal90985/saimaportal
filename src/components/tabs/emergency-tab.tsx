@@ -9,7 +9,7 @@ import EmergencyContactCard from '@/components/emergency-contact-card';
 import EmergencyContactFormDialog from '@/components/modals/emergency-contact-form-dialog';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 
 const EmergencyTab = ({isAdminLoggedIn, isManagementLoggedIn}: AuthProps) => {
@@ -27,8 +27,8 @@ const EmergencyTab = ({isAdminLoggedIn, isManagementLoggedIn}: AuthProps) => {
 
     const handleSaveContact = (newContact: EmergencyContact) => {
         if (!firestore) return;
-        const contactsRef = collection(firestore, 'emergencyContacts');
-        addDocumentNonBlocking(contactsRef, newContact);
+        const contactRef = doc(firestore, 'emergencyContacts', newContact.id);
+        setDocumentNonBlocking(contactRef, newContact, {});
         setIsFormOpen(false);
     }
   

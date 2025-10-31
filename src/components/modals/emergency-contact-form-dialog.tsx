@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { contactTypes, type EmergencyContact, type ContactType } from '@/app/lib/types';
+import { useEffect } from 'react';
 
 const contactSchema = z.object({
   type: z.enum(contactTypes, { required_error: "Please select a contact type." }),
@@ -32,6 +33,18 @@ const EmergencyContactFormDialog = ({ isOpen, onOpenChange, onSave }: EmergencyC
     defaultValues: { name: '', phone: '', description: '' },
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        name: '',
+        phone: '',
+        description: '',
+        type: undefined,
+      });
+    }
+  }, [isOpen, form]);
+
+
   const onSubmit = (data: z.infer<typeof contactSchema>) => {
     const newContact: EmergencyContact = {
       id: Date.now().toString(),
@@ -40,7 +53,6 @@ const EmergencyContactFormDialog = ({ isOpen, onOpenChange, onSave }: EmergencyC
     onSave(newContact);
     toast({ title: 'Emergency contact added successfully.' });
     onOpenChange(false);
-    form.reset();
   };
 
   return (
