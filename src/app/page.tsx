@@ -12,14 +12,14 @@ import AdminTab from '@/components/tabs/admin-tab';
 import MasjidModal from '@/components/modals/masjid-modal';
 import SaimaMartModal from '@/components/modals/saima-mart-modal';
 import { Button } from '@/components/ui/button';
-import type { Tab } from '@/app/lib/types';
+import type { Tab, MartStatus } from '@/app/lib/types';
 import { approvedPhones as initialApprovedPhones, managementPassword as initialManagementPassword } from '@/app/lib/data';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('villa-locator');
   const [showMasjidModal, setShowMasjidModal] = useState(false);
   const [showSaimaMartModal, setShowSaimaMartModal] = useState(false);
-  const [isMartOpen, setIsMartOpen] = useState(false);
+  const [martStatus, setMartStatus] = useState<MartStatus>('Closed');
 
   // Authentication and data states that would typically come from a context or backend
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -60,7 +60,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-      <main className="flex-grow container mx-auto px-4 pt-4 pb-28 md:pb-8 w-full max-w-4xl">
+      <main className="flex-grow container mx-auto px-4 pt-4 pb-28 w-full max-w-4xl">
         {renderTabContent()}
       </main>
       
@@ -87,8 +87,8 @@ export default function Home() {
       <SaimaMartModal 
         isOpen={showSaimaMartModal} 
         onOpenChange={setShowSaimaMartModal}
-        isMartOpen={isMartOpen}
-        setIsMartOpen={setIsMartOpen}
+        martStatus={martStatus}
+        setMartStatus={setMartStatus}
         isAdminLoggedIn={isAdminLoggedIn}
       />
 

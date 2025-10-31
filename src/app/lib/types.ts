@@ -69,7 +69,7 @@ export const contactTypes: ContactType[] = ["Plumber", "Electrician", "Maid", "C
 export interface NamazTimings {
   fajr: string;
   zuhar: string;
-  asar: string;
+asar: string;
   maghrib: string;
   isha: string;
   jumma: string;
@@ -77,6 +77,10 @@ export interface NamazTimings {
   moazin: string;
   khadim: string;
 }
+
+export type MartStatus = "Open" | "Closed" | "Namaz Break" | "Lunch/Dinner Time";
+export const martStatuses: MartStatus[] = ["Open", "Closed", "Namaz Break", "Lunch/Dinner Time"];
+
 
 export interface AuthProps {
   isAdminLoggedIn: boolean;
