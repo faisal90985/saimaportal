@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { villaData as initialVillaData } from '@/app/lib/data';
+import { villaData } from '@/app/lib/villa-data';
 import type { Complaint, AuthProps, VillaData } from '@/app/lib/types';
 import { PlusCircle, FileText } from 'lucide-react';
 import PhoneVerifyDialog from '@/components/modals/phone-verify-dialog';
@@ -19,7 +19,6 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
   const [dialog, setDialog] = useState<'verify' | 'form' | null>(null);
   const [editingComplaint, setEditingComplaint] = useState<Complaint | null>(null);
   const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
-  const [villaData, setVillaData] = useState<VillaData>({});
 
   const complaintsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -27,23 +26,6 @@ const ComplaintsTab = ({ isAdminLoggedIn, isManagementLoggedIn }: AuthProps) => 
   }, [firestore]);
 
   const { data: complaints, isLoading } = useCollection<Complaint>(complaintsQuery);
-
-  const villasQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'villas');
-  }, [firestore]);
-  const { data: villasData } = useCollection<any>(villasQuery);
-
-  useEffect(() => {
-    if (villasData) {
-      const data: VillaData = {};
-      villasData.forEach(villa => {
-        data[villa.id] = villa;
-      });
-      setVillaData(data);
-    }
-  },[villasData]);
-
 
   const handlePostComplaintClick = () => {
     setEditingComplaint(null);

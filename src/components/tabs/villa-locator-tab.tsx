@@ -6,25 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { Villa, AuthProps } from '@/app/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
-import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { villaData } from '@/app/lib/villa-data';
 
 const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [villaDetails, setVillaDetails] = useState<Villa | null>(null);
   const [notFound, setNotFound] = useState(false);
   const { toast } = useToast();
-  const firestore = useFirestore();
 
-  const [residents, setResidents] = useState('');
-  const [currentVillaId, setCurrentVillaId] = useState('');
-
-  const handleSearch = async (term: string) => {
+  const handleSearch = (term: string) => {
     const upperTerm = term.trim().toUpperCase();
     setSearchTerm(term);
 
-    if (upperTerm === '' || !firestore) {
+    if (upperTerm === '') {
       setVillaDetails(null);
       setNotFound(false);
       return;
@@ -37,38 +31,15 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
         formattedTerm = `${parts[0]}-${parts[1].padStart(3, '0')}`;
       }
     }
-    
-    const villasRef = collection(firestore, 'villas');
-    const q = query(villasRef, where("id", "==", formattedTerm));
-    
-    try {
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-            const villaDoc = querySnapshot.docs[0];
-            const villa = villaDoc.data() as Villa;
-            setVillaDetails({ ...villa, id: villaDoc.id });
-            setNotFound(false);
-            setCurrentVillaId(villaDoc.id);
-            setResidents(villa.residents || '');
-        } else {
-            setVillaDetails(null);
-            setNotFound(true);
-            setCurrentVillaId('');
-        }
-    } catch (error) {
-        console.error("Error searching for villa:", error);
-        toast({title: "Error", description: "Could not perform search.", variant: "destructive"});
-    }
-  };
 
-  const handleUpdateResidents = () => {
-    if (isAdminLoggedIn && currentVillaId && firestore) {
-        const villaRef = doc(firestore, 'villas', currentVillaId);
-        updateDocumentNonBlocking(villaRef, { residents: residents });
-        if(villaDetails){
-            setVillaDetails({...villaDetails, residents: residents});
-        }
-        toast({ title: "Resident info updated successfully." });
+    const foundVilla = villaData[formattedTerm];
+
+    if (foundVilla) {
+      setVillaDetails({ ...foundVilla, id: formattedTerm });
+      setNotFound(false);
+    } else {
+      setVillaDetails(null);
+      setNotFound(true);
     }
   };
 
@@ -153,23 +124,6 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
             Villa "{searchTerm}" not found. Please check the number and try again.
           </CardContent>
         </Card>
-      )}
-
-      {isAdminLoggedIn && villaDetails && (
-         <Card>
-            <CardHeader>
-                <CardTitle className="font-headline text-lg">Update Resident Info (Admin)</CardTitle>
-                <CardDescription>Update the resident info for villa {currentVillaId}.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <Input
-                    placeholder="Enter resident info"
-                    value={residents}
-                    onChange={(e) => setResidents(e.target.value)}
-                />
-                <Button onClick={handleUpdateResidents} className="w-full">Update Resident Info</Button>
-            </CardContent>
-         </Card>
       )}
     </div>
   );
