@@ -67,7 +67,7 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Find Your Villa</CardTitle>
+          <CardTitle className="font-headline text-primary">Find Your Villa</CardTitle>
           <CardDescription>Enter a villa number (e.g., A-01, B-252) to find its details.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -86,26 +86,32 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
           <CardHeader>
             <CardTitle className="font-headline text-primary">{currentVilla}</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 sm:col-span-1">
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+                <div className="border-l-4 border-primary pl-3">
+                    <p className="text-sm font-medium text-muted-foreground">Category</p>
+                    <p className="text-lg font-semibold">{villaDetails.category}</p>
+                </div>
+                <div className="border-l-4 border-primary pl-3">
+                    <p className="text-sm font-medium text-muted-foreground">Street</p>
+                    <p className="text-lg font-semibold">{villaDetails.street}</p>
+                </div>
+                <div className="border-l-4 border-primary pl-3">
+                    <p className="text-sm font-medium text-muted-foreground">Block</p>
+                    <p className="text-lg font-semibold">{villaDetails.block}</p>
+                </div>
+                 <div className="border-l-4 border-primary pl-3">
+                    <p className="text-sm font-medium text-muted-foreground">Villa Number</p>
+                    <p className="text-lg font-semibold">{currentVilla}</p>
+                </div>
+            </div>
+             <div className="border-l-4 border-primary pl-3">
                 <p className="text-sm font-medium text-muted-foreground">Residents</p>
                 <p className="text-lg font-semibold">{villaDetails.residents || '-'}</p>
             </div>
-            <div className="col-span-2 sm:col-span-1">
-                <p className="text-sm font-medium text-muted-foreground">Category</p>
-                <p className="text-lg font-semibold">{villaDetails.category}</p>
-            </div>
-            <div>
-                <p className="text-sm font-medium text-muted-foreground">Street</p>
-                <p className="text-lg font-semibold">{villaDetails.street}</p>
-            </div>
-            <div>
-                <p className="text-sm font-medium text-muted-foreground">Block</p>
-                <p className="text-lg font-semibold">{villaDetails.block}</p>
-            </div>
 
             {mapPlaceholder && (
-              <div className="col-span-2">
+              <div className="col-span-2 pt-4">
                 <p className="text-sm font-medium text-muted-foreground mb-2">Location Map</p>
                 <div className="rounded-lg overflow-hidden border">
                     <Image
@@ -152,5 +158,3 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
 };
 
 export default VillaLocatorTab;
-
-    
