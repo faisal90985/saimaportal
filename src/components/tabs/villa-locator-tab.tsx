@@ -55,12 +55,20 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
         const updatedVillaData = { ...villaData, [currentVilla]: { ...villaData[currentVilla], residents: residents }};
         setVillaData(updatedVillaData);
         setVillaDetails(updatedVillaData[currentVilla]);
-        toast({ title: "Residents updated successfully." });
+        toast({ title: "Resident info updated successfully." });
     }
   };
 
   return (
     <div className="space-y-6">
+       <Card className="border-primary-foreground bg-secondary/50">
+        <CardContent className="p-4 text-center text-sm text-foreground">
+          <p>
+            This portal is made only to help the <b className="font-semibold">Saima family</b>. It’s an independent project, not an official management app.
+             For any concerns, contact via WhatsApp: 0322-8844488
+          </p>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="font-headline text-primary">Find Your Villa</CardTitle>
@@ -102,7 +110,7 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
                 </div>
             </div>
              <div className="border-l-4 border-primary pl-3">
-                <p className="text-sm font-medium text-muted-foreground">Residents</p>
+                <p className="text-sm font-medium text-muted-foreground">Resident Info</p>
                 <p className="text-lg font-semibold">{villaDetails.residents || '-'}</p>
             </div>
 
@@ -136,16 +144,16 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
       {isAdminLoggedIn && villaDetails && (
          <Card>
             <CardHeader>
-                <CardTitle className="font-headline text-lg">Update Residents (Admin)</CardTitle>
-                <CardDescription>Update the residents for villa {currentVilla}.</CardDescription>
+                <CardTitle className="font-headline text-lg">Update Resident Info (Admin)</CardTitle>
+                <CardDescription>Update the resident info for villa {currentVilla}.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <Input
-                    placeholder="Enter residents' names"
+                    placeholder="Enter resident info"
                     value={residents}
                     onChange={(e) => setResidents(e.target.value)}
                 />
-                <Button onClick={handleUpdateResidents} className="w-full">Update Residents</Button>
+                <Button onClick={handleUpdateResidents} className="w-full">Update Resident Info</Button>
             </CardContent>
          </Card>
       )}
