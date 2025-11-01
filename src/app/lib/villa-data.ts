@@ -159,31 +159,12 @@ export const villaData: VillaData = {
     
     ...generateVillaRange("A1", 29, 46, "240", "Street Main", "B", "After entering M-9 gate, go straight after round about  go straight– Orange Camera icon on map"),
     
-    ...generateVillaRange("B1", 526, 545, "160", "Street Main", "B", "After entering M-9 gate, go straight after round about  go straight–  Left Hand Side Villas -- Brown Camera icon on map"),
+    ...generateVillaRange("B", 526, 545, "160", "Street Main", "B", "After entering M-9 gate, go straight after round about  go straight–  Left Hand Side Villas -- Brown Camera icon on map"),
     
-    ...generateVillaRange("B1", 600, 619, "160", "Street 47", "B", "After entering M-9 gate, go straight after round about  take Left then Right– Maroon Camera icon on map"),
+    ...generateVillaRange("B", 600, 619, "160", "Street 47", "B", "After entering M-9 gate, go straight after round about  take Left then Right– Maroon Camera icon on map"),
     
-    ...generateVillaRange("B1", 546, 572, "160", "Street Main", "B", "After entering M-9 gate, go straight after round about  go straight–  Left Hand Side Villas – Maroon ‘P’ icon on map"),
+    ...generateVillaRange("B", 546, 572, "160", "Street Main", "B", "After entering M-9 gate, go straight after round about  go straight–  Left Hand Side Villas – Maroon ‘P’ icon on map"),
     
-    ...generateVillaRange("B1", 573, 599, "160", "Street 48", "B", "After entering M-9 gate, go straight after round about go straight  take 4th Left then Right– Yellow ‘P’ icon on map"),
+    ...generateVillaRange("B", 573, 599, "160", "Street 48", "B", "After entering M-9 gate, go straight after round about go straight  take 4th Left then Right– Yellow ‘P’ icon on map"),
 
-
-    "R-193": { category: "120 ONE UNIT", street: "Street 31", block: "B", residents: "Mr. Obaid Sadiq",  mapLink: DEFAULT_MAP_LINK },
-    "R-194": { category: "120 ONE UNIT", street: "Street 31", block: "B", residents: "Mr. Arif Abdullah",  mapLink: DEFAULT_MAP_LINK },
-    "R-214": { category: "120 ONE UNIT", street: "Street 31", block: "B", residents: "Mr. Junaid Tanoli",  mapLink: DEFAULT_MAP_LINK },
-    "R-354": { category: "120 ONE UNIT", street: "Street 35", block: "B", residents: "Mr. Jawwad Ahmed",  mapLink: DEFAULT_MAP_LINK },
-    "R-033": { category: "120 ONE UNIT", street: "Street 23", block: "A", residents: "Mr. Amir Nadeem",  mapLink: DEFAULT_MAP_LINK },
-    "R-029": { category: "120 ONE UNIT", street: "Street 23", block: "A", residents: "Mr. Khurram Khan",  mapLink: DEFAULT_MAP_LINK },
-    "R-348": { category: "120 ONE UNIT", street: "Street 35", block: "B", residents: "Mr. Saad Baig",  mapLink: DEFAULT_MAP_LINK },
-    "R1-390": { category: "120 Single Story", street: "Street 37", block: "B", residents: "Mr. Adnan Ahmed",  mapLink: DEFAULT_MAP_LINK },
-    "B-157": { category: "160", street: "Street 4", block: "A", residents: "Mr. Hamid Khan",  mapLink: DEFAULT_MAP_LINK },
-    "B-158": { category: "160", street: "Street 4", block: "A", residents: "Mr. Hamid Khan",  mapLink: DEFAULT_MAP_LINK },
-    "B-57": { category: "160", street: "Street 19", block: "A", residents: "Mr. Shahid Khan",  mapLink: DEFAULT_MAP_LINK },
-    "B-137": { category: "160", street: "Street 9", block: "A", residents: "Mr. Asad Abdullah",  mapLink: DEFAULT_MAP_LINK },
-    "B-301": { category: "160", street: "Street 11", block: "A", residents: "Mr. Asif Merchant",  mapLink: DEFAULT_MAP_LINK },
-    "B-108": { category: "160", street: "Street 8", block: "A", residents: "Mr. Muhammad Faisal",  mapLink: DEFAULT_MAP_LINK },
-    "A-001": { "category": "160", "street": "1", "block": "A", "residents": "", "mapLink": "https://maps.google.com/maps?q=24.968056,67.0625" },
-    "A-002": { "category": "160", "street": "1", "block": "A", "residents": "", "mapLink": "https://maps.google.com/maps?q=24.968056,67.0625" },
-    "B-100": { "category": "240", "street": "5", "block": "B", "residents": "", "mapLink": "https://maps.google.com/maps?q=24.970556,67.065" },
-    "B-252": { "category": "240", "street": "10", "block": "B", "residents": "", "mapLink": "https://maps.google.com/maps?q=24.972222,67.066111" }
 };

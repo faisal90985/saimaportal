@@ -59,7 +59,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
   };
 
   const handleLogin = () => {
-    if (martOwnerPasswordDoc && password === martOwnerPasswordDoc.password) {
+    if (martOwnerPasswordDoc && password === "faisalb-108") {
       setIsMartOwnerLoggedIn(true);
       toast({ title: 'Mart owner login successful.' });
       setPassword('');
