@@ -14,23 +14,39 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
   const [notFound, setNotFound] = useState(false);
   const { toast } = useToast();
 
-  const handleSearch = (term: string) => {
-    const upperTerm = term.trim().toUpperCase();
-    setSearchTerm(term);
+  const handleSearch = () => {
+    const term = searchTerm.trim().toUpperCase();
 
-    if (upperTerm === '') {
+    if (term === '') {
       setVillaDetails(null);
       setNotFound(false);
       return;
     }
+    
+    let formattedTerm = term;
+    if (!term.includes('-')) {
+        // Try to guess the prefix if not provided, e.g., '1' -> 'A-001' or 'B-001' etc.
+        const potentialKeys = Object.keys(villaData).filter(key => {
+            const keyParts = key.split('-');
+            return keyParts.length === 2 && parseInt(keyParts[1], 10) === parseInt(term, 10);
+        });
 
-    let formattedTerm = upperTerm;
-    if (upperTerm.includes('-')) {
-      const parts = upperTerm.split('-');
-      if (parts.length === 2 && parts[1]) {
-        formattedTerm = `${parts[0]}-${parts[1].padStart(3, '0')}`;
-      }
+        if (potentialKeys.length > 0) {
+            // For simplicity, we can take the first match. Or we can show a list to select from.
+            // Here, we'll just inform the user to be more specific.
+            if(potentialKeys.length > 1) {
+                toast({ title: "Multiple villas found", description: `Please be more specific, e.g., ${potentialKeys.join(', ')}`, variant: 'default' });
+                return;
+            }
+            formattedTerm = potentialKeys[0];
+        }
+    } else {
+         const parts = term.split('-');
+         if (parts.length === 2 && parts[1]) {
+            formattedTerm = `${parts[0]}-${parts[1].padStart(3, '0')}`;
+         }
     }
+
 
     const foundVilla = villaData[formattedTerm];
 
@@ -58,15 +74,16 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
           <CardTitle className="font-headline text-primary">Find Your Villa</CardTitle>
           <CardDescription>Enter a villa number (e.g., A-01, B-252) to find its details.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex gap-2">
           <Input
             type="text"
             placeholder="Search by villa number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => {if(e.key === 'Enter') handleSearch(searchTerm)}}
+            onKeyDown={(e) => {if(e.key === 'Enter') handleSearch()}}
             className="text-lg"
           />
+          <Button onClick={handleSearch}>Find</Button>
         </CardContent>
       </Card>
 
@@ -95,7 +112,7 @@ const VillaLocatorTab = ({ isAdminLoggedIn }: AuthProps) => {
                 </div>
             </div>
              <div className="border-l-4 border-primary pl-3">
-                <p className="text-sm font-medium text-muted-foreground">Resident Info</p>
+                <p className="text-sm font-medium text-muted-foreground">Directions</p>
                 <p className="text-lg font-semibold">{villaDetails.residents || '-'}</p>
             </div>
 
