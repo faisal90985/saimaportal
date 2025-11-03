@@ -14,7 +14,7 @@ import SaimaMartModal from '@/components/modals/saima-mart-modal';
 import { Button } from '@/components/ui/button';
 import type { Tab, MartStatus } from '@/app/lib/types';
 import { useUser, useDoc, useAuth, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection, getDocs, query, where } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
 
 
@@ -34,7 +34,7 @@ export default function Home() {
 
   // Sign in anonymously if not logged in
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isUserLoading && !user && auth) {
       signInAnonymously(auth);
     }
   }, [user, isUserLoading, auth]);
@@ -89,19 +89,19 @@ export default function Home() {
       <div className="fixed top-24 right-5 z-50 flex flex-col gap-4">
         <Button 
           size="icon"
-          aria-label="Masjid Timings"
-          onClick={() => setShowMasjidModal(true)}
-          className="rounded-full w-14 h-14 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 text-2xl"
-        >
-          🕌
-        </Button>
-        <Button 
-          size="icon"
           aria-label="Saima Mart Status"
           onClick={() => setShowSaimaMartModal(true)}
           className="rounded-full w-14 h-14 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 text-2xl"
         >
           🛒
+        </Button>
+        <Button 
+          size="icon"
+          aria-label="Masjid Timings"
+          onClick={() => setShowMasjidModal(true)}
+          className="rounded-full w-14 h-14 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 text-2xl"
+        >
+          🕌
         </Button>
       </div>
 
