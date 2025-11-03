@@ -25,7 +25,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
   const firestore = useFirestore();
 
   const martOwnerPasswordQuery = useMemoFirebase(() => firestore ? doc(firestore, 'martPasswords', 'password') : null, [firestore]);
-  const { data: martOwnerPasswordDoc } = useDoc(martOwnerPasswordQuery);
+  const { data: martOwnerPasswordDoc } = useDoc<{password: string}>(martOwnerPasswordQuery);
 
   const canManage = isMartOwnerLoggedIn || isAdminLoggedIn;
 
@@ -59,7 +59,7 @@ const SaimaMartModal = ({ isOpen, onOpenChange, martStatus, setMartStatus, isAdm
   };
 
   const handleLogin = () => {
-    if (martOwnerPasswordDoc && password === "faisalb-108") {
+    if (martOwnerPasswordDoc && password === martOwnerPasswordDoc.password) {
       setIsMartOwnerLoggedIn(true);
       toast({ title: 'Mart owner login successful.' });
       setPassword('');

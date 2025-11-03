@@ -30,7 +30,7 @@ const AdminTab = ({
   const { data: approvedPhones, isLoading: phonesLoading } = useCollection(approvedPhonesQuery);
 
   const handleAdminLogin = () => {
-    if (adminPasswordDoc && password === "423060Saima") {
+    if (adminPasswordDoc && password === adminPasswordDoc.password) {
       setIsAdminLoggedIn(true);
       toast({ title: "Admin login successful." });
     } else {

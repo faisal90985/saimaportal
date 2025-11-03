@@ -79,7 +79,7 @@ const MasjidModal = ({ isOpen, onOpenChange, isAdminLoggedIn }: MasjidModalProps
     { name: 'Asar', time: formatTime(timings.asar) },
     { name: 'Maghrib', time: formatTime(timings.maghrib) },
     { name: 'Isha', time: formatTime(timings.isha) },
-    { name: 'Jumma', time: formatTime("14:00") },
+    { name: 'Jumma', time: formatTime(timings.jumma) },
   ];
 
   const staffRows = [
@@ -121,7 +121,7 @@ const MasjidModal = ({ isOpen, onOpenChange, isAdminLoggedIn }: MasjidModalProps
                     {Object.keys(timings).filter(k => k !== 'imam' && k !== 'moazin' && k !== 'khadim' && k !== 'jumma').map(key => (
                          <div key={key} className="space-y-2">
                             <Label htmlFor={`edit-${key}`} className="capitalize">{key}</Label>
-                            <Input id={`edit-${key}`} name={key} type="time" value={editedTimings[key as keyof NamazTimings]} onChange={handleInputChange} />
+                            <Input id={`edit-${key}`} name={key} type="time" value={editedTimings[key as keyof NamazTimings] || ''} onChange={handleInputChange} />
                         </div>
                     ))}
                     <div className="space-y-2">
